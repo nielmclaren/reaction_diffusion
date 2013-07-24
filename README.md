@@ -1,4 +1,6 @@
-reaction_diffusion
+Reaction-Diffusion
 ==================
 
-First Processing sketch playing with Reaction-Diffusion patterns. Swoot.
+Playing with Alan Turing's Reaction-Diffusion equations. Based on example by Christopher C. Jennings.
+http://cgjennings.ca/toybox/turingmorph/
+
