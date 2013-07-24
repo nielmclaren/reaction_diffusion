@@ -105,6 +105,9 @@ void keyPressed() {
       step();
     }
   }
+  else if (key == 's') {
+    save("reaction_diffusion.jpg");
+  }
 }
 
 
