@@ -44,7 +44,7 @@ void draw() {
   loadPixels();
   for (int y = 0; y < h; y++) {
     for (int x = 0; x < w; x++) {
-      pixels[y*w + x] = lerpColor(colorA, colorB, map(B[activeBuffer][x][y], low, high, 0, 1));
+      pixels[y*w + x] = map(B[activeBuffer][x][y], low, high, 0, 1) > 0.5 ? 255 : 0; //lerpColor(colorA, colorB, map(B[activeBuffer][x][y], low, high, 0, 1));
     }
   }
   updatePixels();
@@ -106,7 +106,7 @@ void keyPressed() {
     }
   }
   else if (key == 's') {
-    save("reaction_diffusion.jpg");
+    save("out/reaction_diffusion.jpg");
   }
 }
 
