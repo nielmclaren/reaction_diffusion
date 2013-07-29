@@ -3,88 +3,88 @@
  * @see http://cgjennings.ca/toybox/turingmorph/
  */
 
-int w = 68;
-int h = 394;
+int w = 320;
+int h = 240;
 
 // Diffusion constants for each component.
-double lowCA = 6;
-double highCA = 6;
-double lowCB = 20;
-double highCB = 20;
+double CA;
+double CB;
 
-// Diffusion masks for each component.
-double[][] maskA = new double[w][h];
-double[][] maskB = new double[w][h];
+double[] CAs;
+double[] CBs;
+
+int iterations = 5000;
 
 // System state for each component.
 double[][][] A = new double[2][w][h];
 double[][][] B = new double[2][w][h];
 int activeBuffer = 0;
 
-// TODO: Allow more interesting topographical transformations. Maybe have
-// a gradient fill bar, like in image editing software.
 color colorA = color(44, 70, 204);
 color colorB = color(226, 242, 77);
-
 
 void setup() {
   size(w, h);
   
-  PImage img;
-  
-  img = loadImage("vertical.jpg");
-  img.resize(w, h);
-  img.filter(GRAY);
-  img.loadPixels();
-  for (int x = 0; x < w; x++) {
-    for (int y = 0; y < h; y++) {
-      maskA[x][y] = lowCA + red(img.pixels[y * w + x]) / 255 * (highCA - lowCA);
-    }
+  double lowCA = 1;
+  double highCA = 1.05;
+  double lowCB = 24.05;
+  double highCB = 24.15;
+  CAs = new double[10];
+  CBs = new double[10];
+  for (int i = 0; i < 10; i++) {
+    CAs[i] = lowCA + (i / 10.0) * (highCA - lowCA);
+  }
+  for (int i = 0; i < 10; i++) {
+    CBs[i] = lowCB + (i / 10.0) * (highCB - lowCB);
   }
   
-  img = loadImage("vertical.jpg");
-  img.resize(w, h);
-  img.filter(GRAY);
-  img.loadPixels();
-  for (int x = 0; x < w; x++) {
-    for (int y = 0; y < h; y++) {
-      maskB[x][y] = lowCB + red(img.pixels[y * w + x]) / 255 * (highCB - lowCB);
+  for (int i = 0; i < CAs.length; i++) {
+    CA = CAs[i];
+    for (int j = 0; j < CBs.length; j++) {
+      CB = CBs[j];
+      reset();
+      for (int n = 0; n < iterations; n++) {
+        step();
+      }
+      
+      double low = Double.MAX_VALUE;
+      double high = Double.MIN_VALUE;
+      
+      for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++) {
+          double v = B[activeBuffer][x][y];
+          if (v < low) low = v;
+          if (v > high) high = v;
+        }
+      }
+    
+      background(0);
+      loadPixels();
+      for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++) {
+          pixels[y*w + x] = lerpColor(colorA, colorB, (float)((B[activeBuffer][x][y] - low) / (high - low)));
+        }
+      }
+      updatePixels();
+      
+      textSize(22);
+      text("CA: " + CA, 10, 25);
+      text("CB: " + CB, 10, 50);
+      
+      save("out/sample" + i + "x" + j + ".jpg");
     }
-  }
-  
+  }    
+      
   reset();
 }
 
 void draw() {
-  for (int i = 0; i < 10; i++) {
-    step();
-  }
-  
-  background(0);
-  
-  double low = Double.MAX_VALUE;
-  double high = Double.MIN_VALUE;
-  
-  for (int y = 0; y < h; y++) {
-    for (int x = 0; x < w; x++) {
-      double v = B[activeBuffer][x][y];
-      if (v < low) low = v;
-      if (v > high) high = v;
-    }
-  }
-
-  loadPixels();
-  for (int y = 0; y < h; y++) {
-    for (int x = 0; x < w; x++) {
-      pixels[y*w + x] = (B[activeBuffer][x][y] - low) / (high - low) < 0.45 ? color(255) : 0; //lerpColor(colorA, colorB, (float)((B[activeBuffer][x][y] - low) / (high - low)));
-    }
-  }
-  updatePixels();
 }
 
 void step() {
   int n, i, j, iplus1, iminus1, jplus1, jminus1;
-  double CA, CB, DiA, ReA, DiB, ReB;
+  double DiA, ReA, DiB, ReB;
   
   activeBuffer = 1 - activeBuffer;
 
@@ -101,9 +101,6 @@ void step() {
       jminus1 = j-1;
       if (j == 0) jminus1 = h - 1;
       if (j == h - 1) jplus1 = 0;
-      
-      CA = maskA[i][j];
-      CB = maskB[i][j];
 
       // Component A
       DiA = CA * (A[1 - activeBuffer][iplus1][j] - 2.0 * A[1 - activeBuffer][i][j] + A[1 - activeBuffer][iminus1][j]
